@@ -430,6 +430,91 @@ void drawPoly(const std::vector<Vector2>& points)
 	}
 }
 
+int calculateXBezier(std::vector<Vector2>& points, float t)
+{
+	int tmp = 0;
+	if (points.size() >= 4)
+	{
+		tmp += pow((1 - t), 3) * points[0].getX();
+		tmp += (3 * t) * pow((1 - t), 2) * points[1].getX();
+		tmp += (3 * pow(t, 2)) * (1 - t) * points[2].getX();
+		tmp += pow(t, 3) * points[3].getX();
+	}
+	else if (points.size() == 3)
+	{
+		tmp += pow((1 - t), 2) * points[0].getX();
+		tmp += (2 * t) * (1 - t) * points[1].getX();
+		tmp += pow(t, 2) * points[2].getX();
+	}
+	else if (points.size() == 2)
+	{
+		tmp += (1 - t) * points[0].getX();
+		tmp += t * points[1].getX();
+	}
+	else if (points.size() == 1)
+	{
+		tmp += points[0].getX();
+	}
+	return tmp;
+}
+
+int calculateYBezier(std::vector<Vector2>& points, float t)
+{
+	int tmp = 0;
+	if (points.size() >= 4)
+	{
+		tmp += pow((1 - t), 3) * points[0].getY();
+		tmp += (3 * t) * pow((1 - t), 2) * points[1].getY();
+		tmp += (3 * pow(t, 2)) * (1 - t) * points[2].getY();
+		tmp += pow(t, 3) * points[3].getY();
+	}
+	else if (points.size() == 3)
+	{
+		tmp += pow((1 - t), 2) * points[0].getY();
+		tmp += (2 * t) * (1 - t) * points[1].getY();
+		tmp += pow(t, 2) * points[2].getY();
+	}
+	else if (points.size() == 2)
+	{
+		tmp += (1 - t) * points[0].getY();
+		tmp += t * points[1].getY();
+	}
+	else if (points.size() == 1)
+	{
+		tmp += points[0].getY();
+	}
+	return tmp;
+}
+
+void drawBezier(std::vector<Vector2> points) //Hacerlo cada cuatro puntos
+{
+
+	SDL_SetRenderDrawColor(gRenderer, 0xcc, 0x80, 0x00, 0xFF);
+	while (points.size() > 0)
+	{
+		for (float t = 0; t < 1; t += 0.01)
+		{
+			int x = calculateXBezier(points, t);
+			int y = calculateYBezier(points, t);
+
+			if (t < 1)
+			{
+				int x2 = calculateXBezier(points, t + 0.01);
+				int y2 = calculateYBezier(points, t + 0.01);
+				drawLine(x, y, x2, y2);
+			}
+		}
+		for (unsigned i = 0 ; i < 3; i++ )
+		{
+			if(points.size() > 0)
+			points.erase(points.begin());
+		}
+	}
+
+	SDL_SetRenderDrawColor(gRenderer, 0xAA, 0xAF, 0xAF, 0xFF);
+
+}
+
 //----Examen--------------------------------------------------
 
 void drawLineColor(int x1, int y1, int x2, int y2)
@@ -574,6 +659,7 @@ void drawFillCircle(float r, float xc, float yc)
 
 int main(int argc, char* args[])
 {
+	std::vector<Vector2> points;
 	setScreen();
 
 	//Start up SDL and create window
@@ -595,6 +681,18 @@ int main(int argc, char* args[])
 			//Handle events on queue
 			while (SDL_PollEvent(&e) != 0)
 			{
+				int x, y;
+				if (SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_LEFT))
+				{
+					points.push_back(Vector2(x, y));
+				}
+				else if (SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_RIGHT))
+				{
+					if (points.size() > 0)
+					{
+						points.pop_back();
+					}
+				}
 				//User requests quit
 				if (e.type == SDL_QUIT)
 				{
@@ -608,14 +706,15 @@ int main(int argc, char* args[])
 			drawPlain();
 
 			//DrawLine(3,110,300,100);
-			std::vector<Vector2> a = std::vector<Vector2>(3);
-			a[0] = Vector2(0,0);
-			a[1] = Vector2(100,100);
-			a[2] = Vector2(300,200);
+			//a[0] = Vector2(20,20);
+			//a[1] = Vector2(20,200);
+			//a[2] = Vector2(200,200);
+			//a[3] = Vector2(200,20);
+			//a[4] = Vector2(400,20);
+			//a[5] = Vector2(400,200);
+			//a[6] = Vector2(200, 200);
 
-			drawLineColor(35, 80, 300, -10);
-			drawCarita();
-			drawFillCircle(10,300,300);
+			drawBezier(points);
 
 			SDL_RenderPresent(gRenderer);
 		}
