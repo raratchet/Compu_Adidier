@@ -126,11 +126,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="artist.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="utilities.cpp" />
     <ClCompile Include="Vector2.cpp" />
     <ClCompile Include="Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="artist.h" />
+    <ClInclude Include="Pixel.h" />
+    <ClInclude Include="utilities.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
   </ItemGroup>
