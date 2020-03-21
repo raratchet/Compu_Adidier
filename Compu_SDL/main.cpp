@@ -100,6 +100,86 @@ void setScreen()
 	}
 }
 
+void trasnferPixels(Artist* artist, Artist* tmpArtist)
+{
+	for (int x = 0; x < SCREEN_WIDTH; x++)
+	{
+		for (int y = 0; y < SCREEN_HEIGHT; y++)
+		{
+			Pixel* tmp = tmpArtist->getPixelAt(x, y);
+			if (tmp->painted)
+			{
+				Pixel* art = artist->getPixelAt(x, y);
+				
+				art->painted = tmp->painted;
+				art->color = tmp->color;
+			}
+		}
+	}
+}
+
+void changeSDL_COLOR(char color)
+{
+	switch (color)
+	{
+	case 'r':
+		SDL_SetRenderDrawColor(gRenderer, 0xCF, 0x00, 0x00, 0xFF);
+		break;
+	case 'g':
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0xAA, 0x00, 0xFF);
+		break;
+	case 'b':
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0xB4, 0xFF);
+		break;
+	case 'n':
+		SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
+		break;
+	case 'w':
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+		break;
+	case 'y':
+		SDL_SetRenderDrawColor(gRenderer, 0xEB, 0xCD,0x00, 0xFF);
+		break;
+	case 'p':
+		SDL_SetRenderDrawColor(gRenderer, 0x6B, 0x01, 0xA9, 0xFF);
+		break;
+	case 'a':
+		SDL_SetRenderDrawColor(gRenderer, 0x6B, 0xB7, 0xA9, 0xFF);
+		break;
+	case 'f':
+		SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x30, 0xD0, 0xFF);
+		break;
+
+	default:
+		SDL_SetRenderDrawColor(gRenderer, 0xA0, 0xA0, 0xA0, 0xFF);
+		break;
+	}
+
+}
+
+void drawPixels(Artist* artist)
+{
+	char tmp = 0;
+
+	for (int x = 0; x < SCREEN_WIDTH; x++)
+	{
+		for (int y = 0; y < SCREEN_HEIGHT; y++)
+		{
+			if (artist->getPixelAt(x, y)->painted)
+			{
+				char color = artist->getPixelAt(x, y)->color;
+				if (color != tmp)
+				{
+					changeSDL_COLOR(color);
+					tmp = color;
+				}
+				
+				SDL_RenderDrawPoint(gRenderer, x, y);
+			}
+		}
+	}
+}
+
 int main(int argc, char* args[])
 {
 	setScreen();
@@ -111,15 +191,16 @@ int main(int argc, char* args[])
 	}
 	else
 	{
-		Pixel** pixels;
-		pixels = new Pixel * [SCREEN_WIDTH];
-		for (int i = 0; i < SCREEN_WIDTH; i++)
-		{
-			pixels[i] = new Pixel[SCREEN_HEIGHT];
-		}
-
 		//Artist so we can draw other stuff;
-		Artist artist = Artist(&SCREEN_WIDTH, &SCREEN_HEIGHT, &tam,pixels);
+		Artist artist = Artist(SCREEN_WIDTH,SCREEN_HEIGHT,tam);
+		Artist tmpArtist = Artist(SCREEN_WIDTH,SCREEN_HEIGHT,tam);
+
+		char mode = 0;
+		char currentcolor = 'r';
+
+		int x = 0 , y = 0;
+		const Uint8* state;
+		Uint32 mouse;
 
 		std::vector<Vector2> points;
 
@@ -132,47 +213,196 @@ int main(int argc, char* args[])
 		//While application is running
 		while (!quit)
 		{
-			//Handle events on queue
+
+			artist.setColor(currentcolor);
+			tmpArtist.setColor(currentcolor);
+
+			if (mode == 'c')
+			{
+				if (points.size() != 0)
+					tmpArtist.drawCircle(points[0].distance(Vector2(x, y)), points[0].getX(), points[0].getY());
+			}
+
+			if (mode == 'b')
+			{
+				if (points.size() != 0)
+					tmpArtist.drawBezier(points);
+			}
+
+			if (mode == 'z')
+			{
+				if (points.size() != 0)
+					tmpArtist.drawStrip(points);
+			}
+
+			if (mode == 'x')
+			{
+				if (points.size() != 0)
+					tmpArtist.drawPoly(points);
+			}
+
 			while (SDL_PollEvent(&e) != 0)
 			{
-				int x, y;
-				if (SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_LEFT))
+				state = SDL_GetKeyboardState(NULL);
+				mouse = SDL_GetMouseState(&x, &y);
+
+				if (e.type == SDL_MOUSEBUTTONDOWN)
 				{
-					points.push_back(Vector2(x, y));
-					artist.drawBezier(points);
+					if (mouse & SDL_BUTTON(SDL_BUTTON_LEFT))
+					{
+						if (mode == 'b')
+						{
+							points.push_back(Vector2(x, y));
+						}
+
+						if (mode == 'z')
+						{
+							points.push_back(Vector2(x, y));
+						}
+
+						if (mode == 'x')
+						{
+							points.push_back(Vector2(x, y));
+						}
+
+						if (mode == 'c')
+						{
+							points.push_back(Vector2(x, y));
+						}
+
+						if (mode == 'p')
+						{
+							artist.drawPoint(x, y);
+						}
+
+						if (mode == 'e')
+						{
+							artist.erasePoint(x, y);
+						}
+					}
+
 				}
-				else if (SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_RIGHT))
+
+				if (e.type == SDL_MOUSEBUTTONUP)
 				{
-					if (points.size() > 0)
+					if (mode == 'c')
 					{
 						points.clear();
+						trasnferPixels(&artist,&tmpArtist);
 					}
 				}
+
+				if (mouse & SDL_BUTTON_LEFT)
+				{
+					if (mode == 'p')
+					{
+						artist.drawPoint(x, y);
+					}
+				}
+
+				if (state[SDL_SCANCODE_DELETE])
+				{
+					artist.clearPixels();
+				}
+
+				if (state[SDL_SCANCODE_RETURN])
+				{
+					if (mode == 'b' || mode == 'x' || mode == 'z')
+					{
+						points.clear();
+						trasnferPixels(&artist, &tmpArtist);
+					}
+				}
+
+				if (state[SDL_SCANCODE_C])
+				{
+					mode = 'c';
+					points.clear();
+				}
+
+				if (state[SDL_SCANCODE_B])
+				{
+					mode = 'b';
+					points.clear();
+				}
+
+				if (state[SDL_SCANCODE_P])
+				{
+					mode = 'p';
+				}
+
+				if (state[SDL_SCANCODE_E])
+				{
+					mode = 'e';
+				}
+
+				if (state[SDL_SCANCODE_Z])
+				{
+					mode = 'z';
+					points.clear();
+				}
+
+				if (state[SDL_SCANCODE_X])
+				{
+					mode = 'x';
+					points.clear();
+				}
+
+				if (state[SDL_SCANCODE_1])
+				{
+					currentcolor ='r';
+				}
+				if (state[SDL_SCANCODE_2])
+				{
+					currentcolor = 'g';
+				}
+				if (state[SDL_SCANCODE_3])
+				{
+					currentcolor = 'b';
+				}
+				if (state[SDL_SCANCODE_4])
+				{
+					currentcolor = 'n';
+				}
+				if (state[SDL_SCANCODE_5])
+				{
+					currentcolor = 'w';
+				}
+				if (state[SDL_SCANCODE_6])
+				{
+					currentcolor = 'y';
+				}
+				if (state[SDL_SCANCODE_7])
+				{
+					currentcolor = 'p';
+				}
+				if (state[SDL_SCANCODE_8])
+				{
+					currentcolor = 'a';
+				}
+				if (state[SDL_SCANCODE_9])
+				{
+					currentcolor = 'f';
+				}
+
 				//User requests quit
 				if (e.type == SDL_QUIT)
 				{
 					quit = true;
 				}
 			}
+			
+
 
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 0xA0, 0xA0, 0xA0, 0xFF);
+			changeSDL_COLOR(0);
 
-			artist.drawLine(0, 0, 100, 100);
+			drawPixels(&tmpArtist); 
+			drawPixels(&artist);
 
-			SDL_SetRenderDrawColor(gRenderer, 0x00, 0xA0, 0x00, 0xFF);
-			for (int x = 0; x < SCREEN_WIDTH; x++)
-			{
-				for (int y = 0; y < SCREEN_HEIGHT; y++)
-				{
-					if (pixels[x][y].painted)
-						SDL_RenderDrawPoint(gRenderer, x, y);
-				}
-			}
-
-			SDL_SetRenderDrawColor(gRenderer, 0xA0, 0xA0, 0xA0, 0xFF);
-
+			changeSDL_COLOR(0);
 			SDL_RenderPresent(gRenderer);
+			tmpArtist.clearPixels();
 		}
 
 	}

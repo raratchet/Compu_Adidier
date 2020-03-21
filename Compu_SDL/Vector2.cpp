@@ -68,3 +68,24 @@ Vector2 Vector2::operator*(float esc) {
 	temp.setY(y * esc);
 	return temp;
 }
+
+bool Vector2::operator==(Vector2 v2)
+{
+	if (x == v2.getX())
+		if (y == v2.getY())
+			return true;
+	return false;
+}
+
+bool Vector2::operator!=(Vector2 v2)
+{
+	if (x == v2.getX())
+		if (y == v2.getY())
+			return false;
+	return true;
+}
+
+float Vector2::distance(Vector2 v2)
+{
+	return sqrt(pow(v2.getX() - x, 2) + pow(v2.getY() - y, 2));
+}

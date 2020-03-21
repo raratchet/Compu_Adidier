@@ -1,11 +1,11 @@
 #include "artist.h"
 
-Artist::Artist(int* s_width, int* s_heigth, int* _tam,Pixel** s_pixels)
+Artist::Artist(int s_width, int s_heigth, int _tam)
 {
 	SCREEN_WIDTH = s_width;
 	SCREEN_HEIGHT = s_heigth;
 	tam = _tam;
-	pixels = s_pixels;
+	pixels = vector<vector<Pixel>>(SCREEN_HEIGHT,vector<Pixel>(SCREEN_WIDTH));
 }
 
 void Artist::drawLineTotal(int x1, int y1, int x2, int y2)
@@ -379,6 +379,68 @@ void Artist::drawFillCircle(float r, float xc, float yc)
 void Artist::colorate(int x, int y)
 {
 	if (x >= 0 && y >= 0)
-		if (x < * SCREEN_WIDTH && y < * SCREEN_HEIGHT)
-			pixels[x][y].painted = true;
+		if (x < SCREEN_WIDTH && y < SCREEN_HEIGHT)
+		{
+			pixels[y][x].painted = true;
+			pixels[y][x].color = color;
+		}
+}
+
+vector<vector<Pixel>>* Artist::getPixels()
+{
+	return &pixels;
+}
+
+Pixel* Artist::getPixelAt(int x, int y)
+{
+	return &pixels[y][x];
+}
+
+void Artist::clearPixels()
+{
+	for(int x = 0; x < SCREEN_WIDTH; x++)
+		for (int y = 0; y < SCREEN_HEIGHT; y++)
+		{
+			getPixelAt(x, y)->painted = false;
+			getPixelAt(x, y)->color = 0;
+		}
+}
+
+void Artist::drawPoint(int x, int y)
+{
+	for(int i = x-1; i <= x+1; i++)
+		for (int j = y - 1; j <= y + 1; j++)
+		{
+			if(i >= 0 && j >= 0)
+				if(i < SCREEN_WIDTH && j < SCREEN_HEIGHT)
+					colorate(i, j);
+		}
+
+
+}
+
+void Artist::erasePoint(int x, int y)
+{
+	for (int i = x - 1; i <= x + 1; i++)
+		for (int j = y - 1; j <= y + 1; j++)
+		{
+			if (i >= 0 && j >= 0)
+				if (i < SCREEN_WIDTH && j < SCREEN_HEIGHT)
+				{
+					getPixelAt(i, j)->color = 0;
+					getPixelAt(i, j)->painted = false;
+				}
+		}
+
+
+}
+
+void Artist::setColor(char value)
+{
+	color = value;
+}
+
+char Artist::getColor()
+{
+	return color;
 }

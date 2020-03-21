@@ -16,6 +16,9 @@ public:
 	Vector2 operator-(Vector2 v2);
 	float operator*(Vector2 v2);
 	Vector2 operator*(float esc);
+	bool operator==(Vector2 v2);
+	bool operator!=(Vector2);
+	float distance(Vector2);
 	static Vector2 unitVector(Vector2 vec);
 };
 
